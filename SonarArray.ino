@@ -173,12 +173,12 @@ void printDefaultDistances()
 }
 
 /*
- * CALCULATE POSITION
- * This method reads in the horizontal and vertical distances measured by the sensor
- * network. If none of the sensors detect the robot, -1 is sent to the method and the position
- * is not updated. Otherwise the global position variables are updated with the sensor readings.
+ * UPDATE POSITION
+ * This method updates the position of the robot by getting the distance
+ * of the sensor that is passed as an argument. If none of the senors 
+ * detected an object, -1 is passed and the position is not updated.
  */
-void calculatePosition(int horizontalDist, int verticalDist)
+void updatePosition(int horizontalIndx, int verticalIndx)
 {
   /*
     Handle conditions when 
@@ -188,28 +188,38 @@ void calculatePosition(int horizontalDist, int verticalDist)
       horizontalDist = unknown(-1) and verticalDist = unknown(-1)
    */
 
-  if(horizontalDist >= 0 && verticalDist >= 0)
+  if(horizontalIndx >= 0 && verticalIndx >= 0)
   {
     //Both values are known. update the position
-    vertPos = verticalDist;
-    horiPos = horizontalDist;
+    vertPos = getDistance(verticalIndx);
+    horiPos = getDistance(horizontalIndx);
   }
-  else if(horizontalDist >= 0 && verticalDist < 0)
+  else if(horizontalIndx >= 0 && verticalIndx < 0)
   {
     //Horizontal position is known. Update horizontal, use old Vertical
-    horiPos =horizontalDist;
+    horiPos =getDistance(horizontalIndx);
     
   }
-  else if(horizontalDist < 0 && verticalDist >= 0)
+  else if(horizontalIndx < 0 && verticalIndx >= 0)
   {
     //Vertical position in known. Update vertical, use old Horizontal
-    vertPos = verticalDist;
+    vertPos = getDistance(verticalIndx);
   }
   else
   {
     //None are known, use old position, (or stop robot)
     
   }
+}
+
+/*
+ * PRINT POSITION
+ * This method prints the current position of the robot
+ */
+void printPosition()
+{
+  Serial.println("(" + String(horiPos) + "," + String(vertPos) + ")");
+  Serial.println();
 }
 
 /*
@@ -380,28 +390,9 @@ void loop() {
   Serial.println("Active Horiontal: " + String(sensHorizontal));
   Serial.println("Active Vertical: " + String(sensVertical));
 
-//  int horizontalSensors[] = {distance1, distance3};
-//  int verticalSensors[] = {distance2};
-//  int sensHoriz = -1;
-//  int sensVert = -1;
-//  for (int i = 0; i < sizeof(defaultDistances); i+=2)
-//  {
-//    if(horizontalSensors[i] < defaultDistances[i])
-//    {
-//      sensHoriz = i;
-//      break;
-//    }
-//  }
-//
-//  for(int i = 1; i < sizeof(defaultDistances); i+=2)
-//  {
-//    if(verticalSensors[i] < defaultDistances[i])
-//    {
-//      sensVert = i;
-//      break;
-//    }
-//  }
-//
+  updatePosition(sensHorizontal, sensVertical);
+  printPosition();
+
 //  if(sensHoriz >= 0 && sensVert >= 0)
 //  {
 //    calculatePosition(horizontalSensors[sensHoriz], verticalSensors[sensVert]);
