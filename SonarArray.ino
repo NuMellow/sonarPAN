@@ -21,7 +21,6 @@ unsigned int NUM_VERTICAL;
 List<int> horizontalSensors; //Stores index values of horizontal sensors;
 List<int> verticalSensors;  //Stores index values of vertical sensors;
 
-
 /* 
  * CALIBRATE SENSORS
  * This method gets the number of sonar sensors to be set up by the user
@@ -243,6 +242,10 @@ void action()
   
 }
 
+/*
+ * ALL TRIG LOW
+ * This method sets all Trig pins to low
+ */
 void allTrigLow()
 {
   for(int i =0; i < NUM_SONAR; i++)
@@ -251,8 +254,15 @@ void allTrigLow()
   }
 }
 
+/*
+ * GET DISTANCE
+ * this method returns the distance measured by a specified sensor.
+ * It takes an integer argument that specifies the index of the 
+ * TRIG_PINS and ECHO_PINS List
+ */
 int getDistance(int index)
 {
+  delayMicroseconds(10);
   digitalWrite(TRIG_PINS[index], HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PINS[index], LOW);
@@ -267,6 +277,59 @@ int getDistance(int index)
   }
   return distance;
 }
+
+/*
+ * GET ACTIVE SENSOR
+ * This method returns the index of the sensor that has detected an object
+ * In case multiple sensors have detected an object, the method returns the
+ * index of the sensor 
+ */
+int getActiveSensor(bool horizontal)
+{
+  int lowestIndex = -1;
+  int lowestDist = 32767; //Arbitrarily large number
+
+  if(horizontal)
+  {
+    for(int i =0; i < NUM_HORIZONTAL; i++)
+    {
+      int index = horizontalSensors[i];
+      int dist = getDistance(index);
+
+//      Serial.println();
+//      Serial.println("Distance: " + String(dist));
+//      Serial.println("Default Distance: " + String(defaultDistances[index]));
+//      Serial.println("Lowest Dist: " + String(lowestDist));
+
+      if(dist > 0 && dist < defaultDistances[index] && dist < lowestDist)
+      {
+        Serial.println("updated horizontal");
+        lowestIndex = index;
+        lowestDist = dist;
+      }
+        
+    }
+  }
+  else
+  {
+    for(int i =0; i < NUM_VERTICAL; i++)
+    {
+      int index = verticalSensors[i];
+      int dist = getDistance(index);
+
+      if(dist > 0 && dist < defaultDistances[index] && dist < lowestDist)
+      {
+        Serial.println("updated vertical");
+        lowestIndex = index;
+        lowestDist = dist;
+      }
+    }
+  }
+
+  return lowestIndex;
+  
+}
+
 /*
  * Code to run at start up.
  * Should call calibrateSensors and setTarget
@@ -293,7 +356,6 @@ void setup() {
   
 }
 
-
 /*
  * Code running continuously
  */
@@ -311,6 +373,12 @@ void loop() {
   //Method that finds the position of the robot by sensing which horizontal and vertical sensors
   //are not measuring their default distances (Robot not in sight) and use those distances to
   //determine the location of the robot.
+
+  int sensHorizontal = getActiveSensor(true);
+  int sensVertical = getActiveSensor(false);
+
+  Serial.println("Active Horiontal: " + String(sensHorizontal));
+  Serial.println("Active Vertical: " + String(sensVertical));
 
 //  int horizontalSensors[] = {distance1, distance3};
 //  int verticalSensors[] = {distance2};
