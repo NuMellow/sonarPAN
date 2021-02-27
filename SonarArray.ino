@@ -1,6 +1,7 @@
 #include "ListLib.h";
 
 const unsigned int BAUD_RATE=9600;
+unsigned int DEAD_ZONE; //distance to ignore when detecting change in distance
 
 //Target, Position of the target
 unsigned int vertTarget;
@@ -62,6 +63,21 @@ void calibrateSensors() {
   }
 }
 
+/*
+ * SET DEAD ZONE
+ * This method sets the deadzone value. This is amount of distance to ignore
+ * when determining which sensor has detected the robot/object. The idea is 
+ * skip small changes such as a centimeter difference from its default value.
+ * 
+ * A good value to set would be the width of the object/robot you are trying to
+ * detect.
+ */
+void setDeadZone()
+{
+  Serial.println("Enter deadzone amount(cm): ");
+  DEAD_ZONE = Serial.parseInt();
+  Serial.println(); 
+}
 /*
  * SET ORIENT SENSORS
  * This method sets the number of horizontally and vertically facing sonar sensors
@@ -311,7 +327,7 @@ int getActiveSensor(bool horizontal)
 //      Serial.println("Default Distance: " + String(defaultDistances[index]));
 //      Serial.println("Lowest Dist: " + String(lowestDist));
 
-      if(dist > 0 && dist < defaultDistances[index] && dist < lowestDist)
+      if(dist > 0 && (dist + DEAD_ZONE)  < defaultDistances[index] && dist < lowestDist)
       {
         Serial.println("updated horizontal");
         lowestIndex = index;
@@ -364,6 +380,7 @@ void setup() {
   //robot in "sight".
   setDefaultDistances();
   
+  setDeadZone();
 }
 
 /*
