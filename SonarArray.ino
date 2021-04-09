@@ -189,6 +189,43 @@ void printDefaultDistances()
 }
 
 /*
+ * SET TARGET LOCATION
+ * This method sets the target location the robot needs to navigate to
+ */
+void setTargetLocation()
+{
+  int set = 0;
+  int horizontalPos= -1;
+  int verticalPos = -1;
+  
+  while(set == 0){
+    horizontalPos = getDistance(getActiveSensor(true));
+    verticalPos = getDistance(getActiveSensor(false));  
+
+    Serial.println("Target Horizontal: " + String(horizontalPos));
+    Serial.println("Target Vertical: " + String(verticalPos));
+    Serial.println("Is this okay? (1=yes, 0=no)");
+
+    while(Serial.available() == 0){}
+
+    set = Serial.parseInt();
+  }
+
+  horiTarget = horizontalPos;
+  vertTarget = verticalPos;
+  
+}
+/*
+ * PRINT TARGET LOCATION
+ * The method prints the target destination
+ */
+void printTargetLocation()
+{
+  Serial.println("Target: (" + String(horiTarget) + "," + String(vertTarget) + ")");
+  Serial.println();
+}
+
+/*
  * UPDATE POSITION
  * This method updates the position of the robot by getting the distance
  * of the sensor that is passed as an argument. If none of the senors 
@@ -381,6 +418,8 @@ void setup() {
   setDefaultDistances();
   
   setDeadZone();
+
+  setTargetLocation();
 }
 
 /*
@@ -406,6 +445,8 @@ void loop() {
 
   Serial.println("Active Horiontal: " + String(sensHorizontal));
   Serial.println("Active Vertical: " + String(sensVertical));
+
+  printTargetLocation();
 
   updatePosition(sensHorizontal, sensVertical);
   printPosition();
