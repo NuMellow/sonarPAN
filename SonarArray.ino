@@ -241,27 +241,12 @@ void updatePosition(int horizontalIndx, int verticalIndx)
       horizontalDist = unknown(-1) and verticalDist = unknown(-1)
    */
 
-  if(horizontalIndx >= 0 && verticalIndx >= 0)
-  {
-    //Both values are known. update the position
-    vertPos = getDistance(verticalIndx);
+  if(horizontalIndx >=0){
     horiPos = getDistance(horizontalIndx);
   }
-  else if(horizontalIndx >= 0 && verticalIndx < 0)
-  {
-    //Horizontal position is known. Update horizontal, use old Vertical
-    horiPos =getDistance(horizontalIndx);
-    
-  }
-  else if(horizontalIndx < 0 && verticalIndx >= 0)
-  {
-    //Vertical position in known. Update vertical, use old Horizontal
+
+  if(verticalIndx >=0) {
     vertPos = getDistance(verticalIndx);
-  }
-  else
-  {
-    //None are known, use old position, (or stop robot)
-    
   }
 }
 
