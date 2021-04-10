@@ -380,7 +380,7 @@ int getActiveSensor(bool horizontal)
       int index = verticalSensors[i];
       int dist = getDistance(index);
 
-      if(dist > 0 && dist < defaultDistances[index] && dist < lowestDist)
+      if(dist > 0 && (dist + DEAD_ZONE) < defaultDistances[index] && dist < lowestDist)
       {
         Serial.println("updated vertical");
         lowestIndex = index;
@@ -443,8 +443,8 @@ void loop() {
   int sensHorizontal = getActiveSensor(true);
   int sensVertical = getActiveSensor(false);
 
-  Serial.println("Active Horiontal: " + String(sensHorizontal));
-  Serial.println("Active Vertical: " + String(sensVertical));
+  Serial.println("Active Horiontal: " + String(sensHorizontal +1));
+  Serial.println("Active Vertical: " + String(sensVertical +1));
 
   printTargetLocation();
 
@@ -470,6 +470,6 @@ void loop() {
   
   Serial.println();
   Serial.println();
-  delay(2000);
+  delay(5000);
 
 }
