@@ -26,6 +26,61 @@ int LED_PIN = 13;
 unsigned int IR_FLASH_DELAY = 11;
 
 /*
+ * FORWARD
+ * Function that sends the command for the robot to move forward.
+ * The command is encoded as 100 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void forward() {
+  sendLow(); //Start bit
+  sendLow();
+  sendLow();
+  sendHigh();
+}
+
+/*
+ * BACK
+ * Function that sends the command for the robot to move back.
+ * The command is encoded as 110 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void back() {
+  sendLow(); //Start bit
+  sendLow();
+  sendHigh();
+  sendHigh();
+}
+
+/*
+ * RIGHT
+ * Function that sends the command for the robot to move right.
+ * The command is encoded as 001 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void right() {
+  sendLow(); //Start bit
+  sendHigh();
+  sendLow();
+  sendLow();
+}
+
+/*
+ * LEFT
+ * Function that sends the command for the robot to move left.
+ * The command is encoded as 010 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void left() {
+  sendLow(); //Start bit
+  sendLow();
+  sendHigh();
+  sendLow();
+}
+/*
  * SEND LOW
  * Function to flash the IR LED with a frequency of 38KHZ
  * When captured by an IR receiver, it causes the receiver's
@@ -137,6 +192,7 @@ void setDeadZone()
   DEAD_ZONE = Serial.parseInt();
   Serial.println(); 
 }
+
 /*
  * SET ORIENT SENSORS
  * This method sets the number of horizontally and vertically facing sonar sensors
@@ -271,6 +327,7 @@ void setTargetLocation(){
   vertTarget = verticalPos;
   
 }
+
 /*
  * PRINT TARGET LOCATION
  * The method prints the target destination
@@ -322,24 +379,33 @@ void action(){
   String commands[] = {"FWD","RFWD","R","RBCK","BCK","LBCK","L","LFWD"};
   unsigned int index = -1;
   
-  if((vertPos - vertTarget) > 0)
-  {
-    index = 0;
-    if((horiPos - horiTarget) > 0)
-      index += 1;    
-    else
-      index += 7;
-  }
-  else
-  {
-    index = 4;
-    if((horiPos - horiTarget) > 0)
-      index -= 1;    
-    else
-      index += 1;
-  }
+//  if((vertPos - vertTarget) > 0)
+//  {
+//    index = 0;
+//    if((horiPos - horiTarget) > 0)
+//      index += 1;    
+//    else
+//      index += 7;
+//  }
+//  else
+//  {
+//    index = 4;
+//    if((horiPos - horiTarget) > 0)
+//      index -= 1;    
+//    else
+//      index += 1;
+//  }
 
-  
+  if((vertPos - vertTarget) > 0)
+    forward(); //move forward
+  else
+    back(); //move backward
+
+  if((horiPos - horiTarget) > 0)
+    right(); //Move Right
+  else
+    left(); //Move Left
+ 
 }
 
 /*
