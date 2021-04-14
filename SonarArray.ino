@@ -4,12 +4,12 @@ const unsigned int BAUD_RATE=9600;
 unsigned int DEAD_ZONE; //distance to ignore when detecting change in distance
 
 //Target, Position of the target
-unsigned int vertTarget;
-unsigned int horiTarget;
+int vertTarget;
+int horiTarget;
 
 //CurentPos, Current Position of the robot
-unsigned int vertPos;
-unsigned int horiPos;
+int vertPos;
+int horiPos;
 
 //vars for robust calibrate
 unsigned int NUM_SONAR; //Number of sonar sensors connected
@@ -26,6 +26,62 @@ int LED_PIN = 13;
 unsigned int IR_FLASH_DELAY = 11;
 
 /*
+ * LEFT
+ * Function that sends the command for the robot to move left.
+ * The command is encoded as 100 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void left() {
+  sendLow(); //Start bit
+  sendLow();
+  sendLow();
+  sendHigh();
+}
+
+/*
+ * RIGHT
+ * Function that sends the command for the robot to move right.
+ * The command is encoded as 110 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void right() {
+  sendLow(); //Start bit
+  sendLow();
+  sendHigh();
+  sendHigh();
+}
+
+/*
+ * FORWARD
+ * Function that sends the command for the robot to move forward.
+ * The command is encoded as 001 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void forward() {
+  sendLow(); //Start bit
+  sendHigh();
+  sendLow();
+  sendLow();
+}
+
+/*
+ * BACK
+ * Function that sends the command for the robot to move back.
+ * The command is encoded as 010 and is transmitted bit-by-bit
+ * starting with the right most bit.
+ * The start bit is used to synchronize the arduino and the robot
+ */
+void back() {
+  sendLow(); //Start bit
+  sendLow();
+  sendHigh();
+  sendLow();
+}
+
+/*
  * SEND LOW
  * Function to flash the IR LED with a frequency of 38KHZ
  * When captured by an IR receiver, it causes the receiver's
@@ -33,30 +89,30 @@ unsigned int IR_FLASH_DELAY = 11;
  */
 void sendLow() {
   //multiplier and count values allow a duration of roughly 1s
-  unsigned int multiplier = 40; 
+  //unsigned int multiplier = 40; 
 
-  while(multiplier >0)
-  {
-    unsigned int count = 962;
+  //while(multiplier >0)
+  //{
+    unsigned int count = 40;
     while(count > 0) 
     {
       flashLed();
       count--;  
     }
-    multiplier--;
-  }
+  //  multiplier--;
+  //}
 }
 
 /*
  * SEND HIGH
  * Function that essentially turns off the IR transmitter for
- * 1 sec. The IR receiver's Out pin defaults to high(5V) when
+ * 1 millisec. The IR receiver's Out pin defaults to high(5V) when
  * no signals are read, which can be considered as a 1 bit by 
  * the receiver's program.
  */
 void sendHigh() {
   digitalWrite(LED_PIN, LOW);
-  delay(1000);
+  delay(1);
 }
 
 /*
@@ -131,12 +187,12 @@ void calibrateSensors() {
  * A good value to set would be the width of the object/robot you are trying to
  * detect.
  */
-void setDeadZone()
-{
+void setDeadZone() {
   Serial.println("Enter deadzone amount(cm): ");
   DEAD_ZONE = Serial.parseInt();
   Serial.println(); 
 }
+
 /*
  * SET ORIENT SENSORS
  * This method sets the number of horizontally and vertically facing sonar sensors
@@ -271,6 +327,7 @@ void setTargetLocation(){
   vertTarget = verticalPos;
   
 }
+
 /*
  * PRINT TARGET LOCATION
  * The method prints the target destination
@@ -322,24 +379,49 @@ void action(){
   String commands[] = {"FWD","RFWD","R","RBCK","BCK","LBCK","L","LFWD"};
   unsigned int index = -1;
   
+//  if((vertPos - vertTarget) > 0)
+//  {
+//    index = 0;
+//    if((horiPos - horiTarget) > 0)
+//      index += 1;    
+//    else
+//      index += 7;
+//  }
+//  else
+//  {
+//    index = 4;
+//    if((horiPos - horiTarget) > 0)
+//      index -= 1;    
+//    else
+//      index += 1;
+//  }
+
+  //debugging
+  Serial.println(String(vertPos) + " - " + String(vertTarget) + " = " + String(vertPos - vertTarget));
   if((vertPos - vertTarget) > 0)
   {
-    index = 0;
-    if((horiPos - horiTarget) > 0)
-      index += 1;    
-    else
-      index += 7;
+    forward(); //move forward
+    Serial.println("Action: FWD");
   }
   else
   {
-    index = 4;
-    if((horiPos - horiTarget) > 0)
-      index -= 1;    
-    else
-      index += 1;
+    back(); //move backward
+    Serial.println("Action: BCK");
   }
 
+  delay(5000); //Add some delay between vertical & horizontal commands
   
+  Serial.println(String(horiPos) + " - " + String(horiTarget) + " = " + String(horiPos - horiTarget));
+  if((horiPos - horiTarget) > 0)
+  {
+    right(); //Move Right
+    Serial.println("Action: RHT");
+  }
+  else
+  {
+    left(); //Move Left
+    Serial.println("Action: LFT");
+  }
 }
 
 /*
@@ -488,6 +570,8 @@ void loop() {
 
   updatePosition(sensHorizontal, sensVertical);
   printPosition();
+  
+  action();
   
   Serial.println();
   Serial.println();
