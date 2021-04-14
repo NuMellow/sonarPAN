@@ -22,6 +22,65 @@ unsigned int NUM_VERTICAL;
 List<int> horizontalSensors; //Stores index values of horizontal sensors;
 List<int> verticalSensors;  //Stores index values of vertical sensors;
 
+int LED_PIN = 13;
+unsigned int IR_FLASH_DELAY = 11;
+
+/*
+ * SEND LOW
+ * Function to flash the IR LED with a frequency of 38KHZ
+ * When captured by an IR receiver, it causes the receiver's
+ * Out pin to drop to 0V, which can be read as a 0 bit
+ */
+void sendLow() {
+  //multiplier and count values allow a duration of roughly 1s
+  unsigned int multiplier = 40; 
+
+  while(multiplier >0)
+  {
+    unsigned int count = 962;
+    while(count > 0) 
+    {
+      flashLed();
+      count--;  
+    }
+    multiplier--;
+  }
+}
+
+/*
+ * SEND HIGH
+ * Function that essentially turns off the IR transmitter for
+ * 1 sec. The IR receiver's Out pin defaults to high(5V) when
+ * no signals are read, which can be considered as a 1 bit by 
+ * the receiver's program.
+ */
+void sendHigh() {
+  digitalWrite(LED_PIN, LOW);
+  delay(1000);
+}
+
+/*
+ * FLASH LED
+ * This function flashes the IR Led on and off.
+ * It uses a delay between on and off that will
+ * allow 38 flashes in 1millisecond.
+ */
+void flashLed() {
+  digitalWrite(LED_PIN, HIGH);
+  delayMicros(IR_FLASH_DELAY);
+  digitalWrite(LED_PIN, LOW);
+  delayMicros(IR_FLASH_DELAY);
+}
+
+/*
+ * DELAY MICROS
+ * This function pauses the program for a given
+ * amount of microseconds
+ */
+void delayMicros(unsigned int micro) {
+  delayMicroseconds(micro);
+}
+
 /* 
  * CALIBRATE SENSORS
  * This method gets the number of sonar sensors to be set up by the user
@@ -123,8 +182,7 @@ void setOrientSensors(bool horizontal) {
  * It takes a boolean arguement that determines whether to print the
  * horizontal sensor indexes(true) or the vertical(false)
  */
-void printOrientSensors(bool horizontal)
-{
+void printOrientSensors(bool horizontal){
   if(horizontal)
   {
     Serial.println("Horizontal Sensors:");
@@ -180,8 +238,7 @@ void setDefaultDistances(){
  * This method prints out the default distance measured by the sensors when
  * no moving obstancles are present
  */
-void printDefaultDistances()
-{
+void printDefaultDistances(){
   for(int i = 0; i < NUM_SONAR; i++)
   {
     Serial.println("Sensor " + String(i+1) + " default: " + String(defaultDistances[i]));
@@ -192,8 +249,7 @@ void printDefaultDistances()
  * SET TARGET LOCATION
  * This method sets the target location the robot needs to navigate to
  */
-void setTargetLocation()
-{
+void setTargetLocation(){
   int set = 0;
   int horizontalPos= -1;
   int verticalPos = -1;
@@ -219,8 +275,7 @@ void setTargetLocation()
  * PRINT TARGET LOCATION
  * The method prints the target destination
  */
-void printTargetLocation()
-{
+void printTargetLocation(){
   Serial.println("Target: (" + String(horiTarget) + "," + String(vertTarget) + ")");
   Serial.println();
 }
@@ -231,8 +286,7 @@ void printTargetLocation()
  * of the sensor that is passed as an argument. If none of the senors 
  * detected an object, -1 is passed and the position is not updated.
  */
-void updatePosition(int horizontalIndx, int verticalIndx)
-{
+void updatePosition(int horizontalIndx, int verticalIndx){
   /*
     Handle conditions when 
       horizontalDist and verticalDist are known
@@ -254,8 +308,7 @@ void updatePosition(int horizontalIndx, int verticalIndx)
  * PRINT POSITION
  * This method prints the current position of the robot
  */
-void printPosition()
-{
+void printPosition(){
   Serial.println("(" + String(horiPos) + "," + String(vertPos) + ")");
   Serial.println();
 }
@@ -265,8 +318,7 @@ void printPosition()
  * The action method compares the robot position with the target position to determine
  * what action the robot should take e.g. GO FORWARD, TURN LEFT, END etc.
  */
-void action()
-{
+void action(){
   String commands[] = {"FWD","RFWD","R","RBCK","BCK","LBCK","L","LFWD"};
   unsigned int index = -1;
   
@@ -294,8 +346,7 @@ void action()
  * ALL TRIG LOW
  * This method sets all Trig pins to low
  */
-void allTrigLow()
-{
+void allTrigLow(){
   for(int i =0; i < NUM_SONAR; i++)
   {
     digitalWrite(TRIG_PINS[i], LOW);
@@ -308,8 +359,7 @@ void allTrigLow()
  * It takes an integer argument that specifies the index of the 
  * TRIG_PINS and ECHO_PINS List
  */
-int getDistance(int index)
-{
+int getDistance(int index){
   delayMicroseconds(10);
   digitalWrite(TRIG_PINS[index], HIGH);
   delayMicroseconds(10);
@@ -332,8 +382,7 @@ int getDistance(int index)
  * In case multiple sensors have detected an object, the method returns the
  * index of the sensor 
  */
-int getActiveSensor(bool horizontal)
-{
+int getActiveSensor(bool horizontal){
   int lowestIndex = -1;
   int lowestDist = 32767; //Arbitrarily large number
 
@@ -386,6 +435,11 @@ void setup() {
   Serial.begin(BAUD_RATE);
   calibrateSensors();
 
+  //Configure IR LED pin and set to low
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  
+  //configure sonar input/output pins
   for(int i = 0; i<NUM_SONAR; i++)
   {
     pinMode(TRIG_PINS[i], OUTPUT);
@@ -424,7 +478,6 @@ void loop() {
   //Method that finds the position of the robot by sensing which horizontal and vertical sensors
   //are not measuring their default distances (Robot not in sight) and use those distances to
   //determine the location of the robot.
-
   int sensHorizontal = getActiveSensor(true);
   int sensVertical = getActiveSensor(false);
 
@@ -435,23 +488,6 @@ void loop() {
 
   updatePosition(sensHorizontal, sensVertical);
   printPosition();
-
-//  if(sensHoriz >= 0 && sensVert >= 0)
-//  {
-//    calculatePosition(horizontalSensors[sensHoriz], verticalSensors[sensVert]);
-//  }
-//  else if(sensHoriz >= 0 && sensVert < 0)
-//  {
-//    calculatePosition(horizontalSensors[sensHoriz], sensVert);
-//  }
-//  else if(sensHoriz < 0 && sensVert >= 0)
-//  {
-//    calculatePosition(sensHoriz, verticalSensors[sensVert]);
-//  }
-//  else
-//  {
-//    calculatePosition(sensHoriz, sensVert);
-//  }
   
   Serial.println();
   Serial.println();
