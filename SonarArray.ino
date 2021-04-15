@@ -409,7 +409,7 @@ void action(){
     Serial.println("Action: BCK");
   }
 
-  delay(5000); //Add some delay between vertical & horizontal commands
+  delay(1000); //Add some delay between vertical & horizontal commands
   
   Serial.println(String(horiPos) + " - " + String(horiTarget) + " = " + String(horiPos - horiTarget));
   if((horiPos - horiTarget) > 0)
@@ -575,6 +575,6 @@ void loop() {
   
   Serial.println();
   Serial.println();
-  delay(5000);
+  delay(1000);
 
 }
