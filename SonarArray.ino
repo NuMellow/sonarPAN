@@ -6,6 +6,7 @@ unsigned int DEAD_ZONE; //distance to ignore when detecting change in distance
 //Target, Position of the target
 int vertTarget;
 int horiTarget;
+int TARGET_RANGE = 7; //distance away from target the robot can be but still considered navigated to 
 
 //CurentPos, Current Position of the robot
 int vertPos;
@@ -22,7 +23,7 @@ unsigned int NUM_VERTICAL;
 List<int> horizontalSensors; //Stores index values of horizontal sensors;
 List<int> verticalSensors;  //Stores index values of vertical sensors;
 
-int LED_PIN = 13;
+int LED_PIN = A1;
 unsigned int IR_FLASH_DELAY = 11;
 
 /*
@@ -88,19 +89,12 @@ void back() {
  * Out pin to drop to 0V, which can be read as a 0 bit
  */
 void sendLow() {
-  //multiplier and count values allow a duration of roughly 1s
-  //unsigned int multiplier = 40; 
-
-  //while(multiplier >0)
-  //{
-    unsigned int count = 40;
-    while(count > 0) 
-    {
-      flashLed();
-      count--;  
-    }
-  //  multiplier--;
-  //}
+  unsigned int count = 40;
+  while(count > 0) 
+  {
+    flashLed();
+    count--;  
+  }
 }
 
 /*
@@ -398,30 +392,44 @@ void action(){
 
   //debugging
   Serial.println(String(vertPos) + " - " + String(vertTarget) + " = " + String(vertPos - vertTarget));
-  if((vertPos - vertTarget) > 0)
+  if((vertPos - vertTarget) > TARGET_RANGE)
   {
     forward(); //move forward
     Serial.println("Action: FWD");
   }
-  else
+  else if((vertPos - vertTarget) < -TARGET_RANGE)
   {
     back(); //move backward
     Serial.println("Action: BCK");
   }
+  else //This is testing moving in one direction first. Then turn and keep moving
+  {
+    Serial.println(String(horiPos) + " - " + String(horiTarget) + " = " + String(horiPos - horiTarget));
+    if((horiPos - horiTarget) < TARGET_RANGE)
+    {
+      right(); //Move Right
+      Serial.println("Action: RHT");
+    }
+    else if((horiPos - horiTarget) > -TARGET_RANGE)
+    {
+      left(); //Move Left
+      Serial.println("Action: LFT");
+    }
+  }
 
-  delay(1000); //Add some delay between vertical & horizontal commands
+  //delay(1000); //Add some delay between vertical & horizontal commands
+//  Serial.println(String(horiPos) + " - " + String(horiTarget) + " = " + String(horiPos - horiTarget));
+//  if((horiPos - horiTarget) < TARGET_RANGE)
+//  {
+//    right(); //Move Right
+//    Serial.println("Action: RHT");
+//  }
+//  else if((horiPos - horiTarget) > -TARGET_RANGE)
+//  {
+//    left(); //Move Left
+//    Serial.println("Action: LFT");
+//  }
   
-  Serial.println(String(horiPos) + " - " + String(horiTarget) + " = " + String(horiPos - horiTarget));
-  if((horiPos - horiTarget) > 0)
-  {
-    right(); //Move Right
-    Serial.println("Action: RHT");
-  }
-  else
-  {
-    left(); //Move Left
-    Serial.println("Action: LFT");
-  }
 }
 
 /*
@@ -486,7 +494,7 @@ int getActiveSensor(bool horizontal){
         lowestIndex = index;
         lowestDist = dist;
       }
-        
+      delay(10);
     }
   }
   else
@@ -496,12 +504,14 @@ int getActiveSensor(bool horizontal){
       int index = verticalSensors[i];
       int dist = getDistance(index);
 
+      
       if(dist > 0 && (dist + DEAD_ZONE) < defaultDistances[index] && dist < lowestDist)
       {
         Serial.println("updated vertical");
         lowestIndex = index;
         lowestDist = dist;
       }
+      delay(10);
     }
   }
 
@@ -515,11 +525,12 @@ int getActiveSensor(bool horizontal){
  */
 void setup() {
   Serial.begin(BAUD_RATE);
-  calibrateSensors();
-
+  
   //Configure IR LED pin and set to low
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
+  
+  calibrateSensors();
   
   //configure sonar input/output pins
   for(int i = 0; i<NUM_SONAR; i++)
@@ -577,4 +588,10 @@ void loop() {
   Serial.println();
   delay(1000);
 
+//  forward();
+//  left();
+//  delay(2000);
+//  right();
+//  back();
+//  delay(1000);
 }
